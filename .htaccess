@@ -1,0 +1,20 @@
+Options -Indexes
+DirectoryIndex index.html
+
+AddDefaultCharset UTF-8
+
+# private files
+<FilesMatch "^(config\.php|hits\.jsonl|.*\.log)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# never cache the funnel
+<FilesMatch "\.(html|php)$">
+    Header set Cache-Control "no-store, max-age=0"
+</FilesMatch>

